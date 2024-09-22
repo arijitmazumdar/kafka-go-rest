@@ -1,6 +1,44 @@
 # Project kafka-go-rest
 
-One Paragraph of project description goes here
+# Kafka Go REST API
+
+This project will create a REST API using Golang. The data will be saved in a Kafka topic. The API will support POST, PUT, GET (ALL and By key) and DELETE OPTION
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant GoAPI
+    participant Kafka
+
+    Client->>GoAPI: POST /data
+    GoAPI->>Kafka: Produce message to topic
+    Kafka-->>GoAPI: Acknowledgement
+    GoAPI-->>Client: 200 OK
+
+    Client->>GoAPI: GET /data/{key}
+    GoAPI->>Kafka: Consume message from topic
+    Kafka-->>GoAPI: Message data
+    GoAPI-->>Client: 200 OK with data
+
+    Client->>GoAPI: PUT /data/{key}
+    GoAPI->>Kafka: Update message in topic
+    Kafka-->>GoAPI: Acknowledgement
+    GoAPI-->>Client: 200 OK
+
+    Client->>GoAPI: DELETE /data/{key}
+    GoAPI->>Kafka: Delete message from topic
+    Kafka-->>GoAPI: Acknowledgement
+    GoAPI-->>Client: 200 OK
+
+    Client->>GoAPI: PATCH /data/{key}
+    GoAPI-->>Client: 405 Method Not Allowed
+
+```
+
+## Design Considerations
+1. Kafka Topic will be created with `compacted` cleanup policy.
+2. There will be 
+
 
 ## Getting Started
 
