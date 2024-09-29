@@ -16,7 +16,10 @@ run:
 # Test the application
 test:
 	@echo "Testing..."
-	@go test ./... -v
+	@podman run -d -p 9092:9092 --name native-broker apache/kafka-native:latest    
+	@go test ./... -v -count=1
+	@podman stop native-broker
+	@podman rm native-broker        
 
 # Clean the binary
 clean:

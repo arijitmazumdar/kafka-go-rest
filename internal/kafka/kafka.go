@@ -109,3 +109,7 @@ func (c *Consumer) Consume(key string) (string, error) {
 		}
 	}
 }
+
+func (p *Consumer) Close() {
+	p.consumer.Close()
+}
