@@ -2,97 +2,62 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
-// User represents a user in the system
 type User struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID    int     `json:"id"`
+	Name  string  `json:"name"`
+	Email string  `json:"email"`
+	Age   float64 `json:"age"`
 }
 
-// UserRouteHandler handles routes related to users
-type UserRouteHandler struct {
-	users map[string]User
+// UserRouterHandler handles routes related to users
+func (s *Server) UserRouterHandler() http.Handler {
+	r := http.NewServeMux()
+	r.HandleFunc("/users", s.UsersHandler)
+	return r
 }
 
-// NewUserRouteHandler creates a new UserRouteHandler
-func NewUserRouteHandler() *UserRouteHandler {
-	return &UserRouteHandler{
-		users: make(map[string]User),
+// UsersHandler handles the /users route
+// @Summary Get users
+// @Description Get a list of users
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} User
+// @Router /users [get]
+// UsersHandler handles the /users route
+func (s *Server) UsersHandler(w http.ResponseWriter, r *http.Request) {
+	users := []User{
+		{ID: 1, Name: "John Doe", Email: "john@example.com", Age: 30},
+		{ID: 2, Name: "Jane Smith", Email: "jane@example.com", Age: 25},
 	}
+
+	jsonResp, err := json.Marshal(users)
+	if err != nil {
+		log.Fatalf("error handling JSON marshal. Err: %v", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(jsonResp)
 }
 
-// RegisterRoutes registers the user routes with the router
-func (h *UserRouteHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/users", h.GetUsers).Methods("GET")
-	router.HandleFunc("/users/{id}", h.GetUser).Methods("GET")
-	router.HandleFunc("/users", h.CreateUser).Methods("POST")
-	router.HandleFunc("/users/{id}", h.UpdateUser).Methods("PUT")
-	router.HandleFunc("/users/{id}", h.DeleteUser).Methods("DELETE")
-}
+// UserByKeyHandler handles the /users/{id} route
+func (s *Server) UserByKeyHandler(w http.ResponseWriter, r *http.Request) {
+	user := User{
+		ID:    1,
+		Name:  "John Doe",
+		Email: "john@example.com",
+		Age:   30,
+	}
 
-// GetUsers handles GET /users
-func (h *UserRouteHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	users := make([]User, 0, len(h.users))
-	for _, user := range h.users {
-		users = append(users, user)
+	jsonResp, err := json.Marshal(user)
+	if err != nil {
+		log.Fatalf("error handling JSON marshal. Err: %v", err)
 	}
-	json.NewEncoder(w).Encode(users)
-}
 
-// GetUser handles GET /users/{id}
-func (h *UserRouteHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-	user, exists := h.users[id]
-	if !exists {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-	json.NewEncoder(w).Encode(user)
-}
-
-// CreateUser handles POST /users
-func (h *UserRouteHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	h.users[user.ID] = user
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
-}
-
-// UpdateUser handles PUT /users/{id}
-func (h *UserRouteHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if _, exists := h.users[id]; !exists {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-	h.users[id] = user
-	json.NewEncoder(w).Encode(user)
-}
-
-// DeleteUser handles DELETE /users/{id}
-func (h *UserRouteHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-	if _, exists := h.users[id]; !exists {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-	delete(h.users, id)
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(jsonResp)
 }

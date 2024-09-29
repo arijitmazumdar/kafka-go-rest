@@ -1,0 +1,33 @@
+definitions:
+  server.User:
+    properties:
+      age:
+        type: number
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.User'
+            type: array
+      summary: Get users
+      tags:
+      - users
+swagger: "2.0"
