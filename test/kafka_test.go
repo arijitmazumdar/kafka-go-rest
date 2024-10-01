@@ -90,3 +90,37 @@ func TestLatestMessageConsumed(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "test_another_message", message)
 }
+
+func TestConsumeAll(t *testing.T) {
+	os.Setenv("KAFKA_BROKER", "localhost:9092")
+	os.Setenv("TIMEOUT_MS", "5000")
+	producer := kafka.NewProducer()
+	//create a random string for the topic consumer
+	topic := "test_topic_" + time.Now().Format("20060102150405.000")
+	//create a random consumer group for the topic
+	consumerGroup := "test_group_" + time.Now().Format("20060102150405.000")
+
+	// Produce some messages
+	log.Println("Producing messages to topic:", topic)
+	_, _, err := producer.Produce(topic, "key1", "value1")
+	assert.Nil(t, err)
+	_, _, err = producer.Produce(topic, "key2", "value2")
+	assert.Nil(t, err)
+	_, _, err = producer.Produce(topic, "key1", "updated_value1")
+	assert.Nil(t, err)
+
+	log.Println("Sleeping for 3 seconds")
+	// Allow some time for the message to be produced and consumed
+	time.Sleep(3 * time.Second)
+	defer producer.Close()
+
+	consumer := kafka.NewConsumer(consumerGroup, []string{topic})
+	defer consumer.Close()
+
+	allMessages, err := consumer.ConsumeAll()
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(allMessages))
+	assert.Equal(t, "updated_value1", allMessages["key1"])
+	assert.Equal(t, "value2", allMessages["key2"])
+}
