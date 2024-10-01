@@ -110,6 +110,30 @@ func (c *Consumer) Consume(key string) (string, error) {
 	}
 }
 
+// Consume all messages and creates an map where key is the unique key and value is latest value in the topic for that key
+func (c *Consumer) ConsumeAll() (map[string]string, error) {
+	timeoutMsStr := os.Getenv("TIMEOUT_MS")
+	timeoutMs, err := strconv.Atoi(timeoutMsStr)
+	if err != nil {
+		log.Fatalf("Invalid TIMEOUT_MS value: %s", timeoutMsStr)
+	}
+
+	allMessages := make(map[string]string)
+
+	for {
+		msg, err := c.consumer.ReadMessage(time.Millisecond * time.Duration(timeoutMs))
+		if err != nil && err.(kafka.Error).Code() == kafka.ErrTimedOut {
+			log.Printf("Timed out")
+			return allMessages, nil
+		} else if err != nil {
+			log.Printf("Consumer error: %v (%v)\n", err, err.(kafka.Error).Code())
+			return allMessages, err
+		}
+		allMessages[string(msg.Key)] = string(msg.Value)
+		log.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+	}
+}
+
 func (p *Consumer) Close() {
 	p.consumer.Close()
 }
